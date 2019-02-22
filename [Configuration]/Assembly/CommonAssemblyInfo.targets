@@ -1,0 +1,11 @@
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+  	<Assembly_Description>MarsIceEngine is an XNA/MonoGame extension</Assembly_Description>
+	<Assembly_Company>snowinmars</Assembly_Company>
+	<Assembly_Product>MarsIceEngine</Assembly_Product>
+	<Assembly_Copyright>GNU/GPL</Assembly_Copyright>
+	<Assembly_Trademark>MarsIceEngine</Assembly_Trademark>
+<!-- 	<InternalsVisibleTo>MarsIceEngine.Entity.Tests</InternalsVisibleTo>
+	<NeutralResourcesLanguage>en-US</NeutralResourcesLanguage> -->
+  </PropertyGroup>
+</Project>
