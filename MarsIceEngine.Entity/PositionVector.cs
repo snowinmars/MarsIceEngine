@@ -93,23 +93,36 @@ namespace MarsIceEngine.Entity
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                var projection = Projection;
+                var projection = AxisProjection;
                 var magnitude = Magnitude;
 
-                var x = projection.X / magnitude;
-                var y = projection.Y / magnitude;
+                var x = this.InitialPosition.X + projection.X / magnitude;
+                var y = this.InitialPosition.Y + projection.Y / magnitude;
 
                 return new PositionVector(this.InitialPosition.X, this.InitialPosition.Y, x, y);
             }
         }
 
-        public Position Projection
+        public Position AxisProjection
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                var x = this.InitialPosition.X - this.TerminalPosition.X;
-                var y = this.InitialPosition.Y - this.TerminalPosition.Y;
+                var x = Math.Abs(this.InitialPosition.X - this.TerminalPosition.X);
+                var y = Math.Abs(this.InitialPosition.Y - this.TerminalPosition.Y);
+
+                var isCollinearWithX = this.InitialPosition.X < this.TerminalPosition.X;
+                var isCollinearWithY = this.InitialPosition.Y < this.TerminalPosition.Y;
+
+                if (!isCollinearWithX)
+                {
+                    x *= -1;
+                }
+
+                if (!isCollinearWithY)
+                {
+                    y *= -1;
+                }
 
                 return new Position(x, y);
             }
@@ -128,24 +141,41 @@ namespace MarsIceEngine.Entity
             }
         }
 
+        public double DotProduct(PositionVector other)
+        {
+            return this.AxisProjection.X * other.AxisProjection.X + this.AxisProjection.Y * other.AxisProjection.Y;
+        }
+
         public static PositionVector operator -(PositionVector pos)
         {
             var unit = pos.Normalized;
             return pos - unit;
         }
 
+        public PositionVector Translate(PositionVector other)
+        {
+            var delta = this.InitialPosition - other.InitialPosition;
+
+            var result = new PositionVector();
+
+            result.InitialPosition = this.InitialPosition;
+            result.TerminalPosition = other.TerminalPosition - delta;
+
+            return result;
+        }
+
         public static PositionVector operator -(PositionVector lhs, PositionVector rhs)
         {
             return new PositionVector
             {
-                TerminalPosition = lhs.InitialPosition,
-                InitialPosition = rhs.TerminalPosition
+                InitialPosition = rhs.TerminalPosition,
+                TerminalPosition = lhs.TerminalPosition,
             };
         }
 
-        public static PositionVector operator *(PositionVector vector, int number)
+        public static PositionVector operator *(PositionVector vector, double number)
         {
-            var projection = vector.Projection;
+            var projection = vector.AxisProjection;
             var x = projection.X * number;
             var y = projection.Y * number;
 
@@ -155,6 +185,18 @@ namespace MarsIceEngine.Entity
                 TerminalPosition = new Position(x, y),
             };
         }
+        
+        public static PositionVector operator *(double number, PositionVector vector)
+            => vector * number;
+
+        public static PositionVector operator *(PositionVector vector, float number)
+            => vector * (double)number;
+
+        public static PositionVector operator *(float number, PositionVector vector)
+            => vector * number;
+
+        public static PositionVector operator *(PositionVector vector, int number)
+            => vector * (double)number;
 
         public static PositionVector operator *(int number, PositionVector vector)
             => vector * number;
@@ -211,12 +253,29 @@ namespace MarsIceEngine.Entity
             this.TerminalPosition = this.InitialPosition;
         }
 
+        public Point ToPoint()
+        {
+            return this.TerminalPosition.ToPoint();
+        }
+
+        public Vector2 ToVector2()
+        {
+            return this.TerminalPosition.ToVector2();
+        }
+        
         #region trigonometric
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public double Cos()
         {
             return this.TerminalPosition.X / Magnitude;
+        }
+
+        public double Cos(PositionVector other)
+        {
+            var dotProduct = this.DotProduct(other);
+
+            return dotProduct / (this.Magnitude * other.Magnitude);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -241,6 +300,22 @@ namespace MarsIceEngine.Entity
         public double Sin()
         {
             return this.TerminalPosition.Y / Magnitude;
+        }
+
+        public double Sin(PositionVector other)
+        {
+            var thisMagnitude = this.Magnitude;
+            var otherMagnitude = other.Magnitude;
+            var thirdMagnitude = (this - other).Magnitude;
+
+            var halfPerimeter = (thisMagnitude + otherMagnitude + thirdMagnitude) / 2;
+
+            return (2 
+                        * Math.Sqrt(halfPerimeter 
+                                    * (halfPerimeter - thisMagnitude) 
+                                    * (halfPerimeter - otherMagnitude) 
+                                    * (halfPerimeter - thirdMagnitude))) 
+                / (thisMagnitude * otherMagnitude);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

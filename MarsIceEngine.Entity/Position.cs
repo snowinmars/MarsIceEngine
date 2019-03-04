@@ -46,8 +46,20 @@ namespace MarsIceEngine.Entity
         public static Position operator -(Position lhs, Position rhs)
             => new Position(lhs.X - rhs.X, lhs.Y - rhs.Y);
 
-        public static Position operator *(Position vector, int number)
+        public static Position operator *(Position vector, double number)
             => new Position(vector.X * number, vector.Y * number);
+
+        public static Position operator *(double number, Position vector)
+            => vector * number;
+
+        public static Position operator *(Position vector, float number)
+            => vector * (double)number;
+
+        public static Position operator *(float number, Position vector)
+            => vector * number;
+
+        public static Position operator *(Position vector, int number)
+            => vector * (double)number;
 
         public static Position operator *(int number, Position vector)
             => vector * number;
