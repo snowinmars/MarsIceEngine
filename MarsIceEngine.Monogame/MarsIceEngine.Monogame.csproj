@@ -114,6 +114,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MarsIceEngine.Common\MarsIceEngine.Common.csproj">
+      <Project>{D365EFB1-FE7E-479D-B902-CE231EFA3A6F}</Project>
+      <Name>MarsIceEngine.Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MarsIceEngine.Entity\MarsIceEngine.Entity.csproj">
       <Project>{1446C558-8341-4A50-99BD-4ACB6ECEB133}</Project>
       <Name>MarsIceEngine.Entity</Name>

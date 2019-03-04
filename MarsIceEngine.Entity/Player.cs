@@ -1,9 +1,5 @@
-﻿using System;
-using System.CodeDom;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using MarsIceEngine.Common;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -24,8 +20,52 @@ namespace MarsIceEngine.Entity
 
         public Vector2 PositionRadiusVector { get; set; }
 
-        public Texture2D Texture { get; set; }
+        public TextureAnimation Texture { get; set; }
 
-        public Point Position => PositionRadiusVector.ToPoint();
+        public void Draw(SpriteBatch spriteBatch)
+        {
+            Texture.Draw(spriteBatch, PositionRadiusVector);
+        }
+
+        public void Update(GameTime gameTime, InputHelper inputHelper)
+        {
+            var act = Act.Nop;
+
+            var delta = new Vector2();
+
+            if (inputHelper.WasActionHappened(Act.MoveRight))
+            {
+                act = Act.MoveRight;
+                delta += Vector2.UnitX * Constants.WorldCellWidth;
+            }
+
+            if (inputHelper.WasActionHappened(Act.MoveLeft))
+            {
+                act = Act.MoveLeft;
+                delta -= Vector2.UnitX * Constants.WorldCellWidth;
+            }
+
+            if (inputHelper.WasActionHappened(Act.MoveUp))
+            {
+                act = Act.MoveUp;
+                delta -= Vector2.UnitY * Constants.WorldCellWidth;
+            }
+
+            if (inputHelper.WasActionHappened(Act.MoveDown))
+            {
+                act = Act.MoveDown;
+                delta += Vector2.UnitY * Constants.WorldCellWidth;
+            }
+
+            Texture.Act = act;
+
+            if (Texture.AnimationIsDone)
+            {
+                PositionRadiusVector += delta;
+            }
+
+            Texture.Update(gameTime);
+
+        }
     }
 }

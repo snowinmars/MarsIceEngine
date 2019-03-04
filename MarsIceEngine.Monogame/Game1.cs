@@ -1,35 +1,73 @@
-﻿using MarsIceEngine.Entity;
+﻿using System.Collections.Generic;
+using MarsIceEngine.Common;
+using MarsIceEngine.Entity;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using SandS.Algorithm.Library.OtherNamespace;
 
 namespace MarsIceEngine.Monogame
 {
     public class Game1 : Game
     {
-        private readonly GraphicsDeviceManager graphics;
+        private readonly GraphicsDeviceManager graphicsDeviceManager;
         private readonly InputHelper inputHelper;
         private readonly KeyboardInputHelper keyboardInputHelper;
+        private readonly MouseInputHelper mouseInputHelper;
         private SpriteBatch spriteBatch;
-        Player Player { get;  }
+        private readonly Player player;
+        private readonly World world;
+        public readonly Camera Camera;
 
         public Game1()
         {
-            graphics = new GraphicsDeviceManager(this);
+            graphicsDeviceManager = new GraphicsDeviceManager(this)
+            {
+                IsFullScreen = true,
+                HardwareModeSwitch = false
+            };
+
+            IsMouseVisible = false;
+            Window.AllowUserResizing = false;
+
             keyboardInputHelper = new KeyboardInputHelper();
-            inputHelper = new InputHelper(keyboardInputHelper);
-            Player = new Player();
+            mouseInputHelper = new MouseInputHelper();
+            inputHelper = new InputHelper(keyboardInputHelper, mouseInputHelper);
+
             Content.RootDirectory = "Content";
+            Camera = new Camera();
+
+            player = new Player();
+
+            var cells = new WorldCell[Constants.WorldWidth, Constants.WorldHeight];
+
+            for (var x = 0; x < Constants.WorldWidth; x++)
+            {
+                for (var y = 0; y < Constants.WorldHeight; y++)
+                {
+                    var cellCenterPosition = new Position(Constants.WorldCellWidth * x, Constants.WorldCellHeight * y);
+                    var cell = new WorldCell(cellCenterPosition);
+                    cells[x, y] = cell;
+                }
+            }
+
+            world = new World(cells);
         }
+
 
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            spriteBatch.Begin();
+            spriteBatch.Begin(SpriteSortMode.BackToFront,
+                BlendState.AlphaBlend,
+                null,
+                null,
+                null,
+                null,
+                Camera.TranslationMatrix);
 
-            spriteBatch.Draw(Player.Texture, Player.PositionRadiusVector, Color.White);
+            world.Draw(spriteBatch);
+            player.Draw(spriteBatch);
 
             spriteBatch.End();
 
@@ -38,71 +76,49 @@ namespace MarsIceEngine.Monogame
 
         protected override void Initialize()
         {
+            Camera.ViewportWidth = graphicsDeviceManager.GraphicsDevice.Viewport.Width;
+            Camera.ViewportHeight = graphicsDeviceManager.GraphicsDevice.Viewport.Height;
+
             base.Initialize();
         }
 
         protected override void LoadContent()
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
-            Player.Texture = spriteBatch.GraphicsDevice.Generate(10, 15, Color.Bisque);
+            var playerTextures = new Dictionary<Act, Texture2D>
+            {
+                {Act.Nop, Content.Load<Texture2D>("player-nop")},
+                {Act.MoveRight, Content.Load<Texture2D>("player-moveright")},
+            };
 
+            player.Texture = new TextureAnimation(playerTextures, 7);
+
+            foreach (var cell in world.Cells)
+            {
+                cell.Texture = new TextureAnimation(Content.Load<Texture2D>("cell"), 1);
+            }
+
+            Camera.CenterOn(player.PositionRadiusVector);
         }
 
         protected override void UnloadContent()
         {
+            Content.Unload();
         }
 
         protected override void Update(GameTime gameTime)
         {
             inputHelper.Update(gameTime);
 
+            player.Update(gameTime, inputHelper);
+            
+            Camera.Update(inputHelper);
+            Camera.CenterOn(player.PositionRadiusVector);
+
             if (inputHelper.WasActionHappened(Act.Back))
             {
                 Exit();
             }
-
-            // inputs
-            const float multiplier = 0.1f;
-            var delta = Vector2.Zero;
-            if (inputHelper.WasActionHappened(Act.MoveUp))
-            {
-                delta -= Vector2.UnitY * multiplier;
-            }
-
-            if (inputHelper.WasActionHappened(Act.MoveDown))
-            {
-                delta += Vector2.UnitY * multiplier;
-            }
-
-            if (inputHelper.WasActionHappened(Act.MoveRigth))
-            {
-                delta += Vector2.UnitX * multiplier;
-            }
-
-            if (inputHelper.WasActionHappened(Act.MoveLeft))
-            {
-                delta -= Vector2.UnitX * multiplier;
-            }
-
-            Player.Acceleration += delta;
-
-            // inertion
-            const float inertion = 1f;
-            var acc = Player.Acceleration;
-            if (Player.Acceleration.Length() > float.Epsilon)
-            {
-                Player.Acceleration -= acc * inertion;
-            }
-
-            if (Player.Acceleration.Length() < float.Epsilon)
-            {
-                Player.Acceleration += acc * inertion;
-            }
-
-            // recalc
-
-            Player.Speed += Player.Acceleration;
-            Player.PositionRadiusVector += Player.Speed;
 
             base.Update(gameTime);
         }

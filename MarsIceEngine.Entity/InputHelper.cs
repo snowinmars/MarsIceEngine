@@ -18,7 +18,10 @@ namespace MarsIceEngine.Entity
         MoveUp,
         MoveDown,
         MoveLeft,
-        MoveRigth,
+        MoveRight,
+
+        ZoomIn,
+        ZoomOut,
     }
 
     public class InputHelper
@@ -29,23 +32,37 @@ namespace MarsIceEngine.Entity
             { Keys.E, Act.MoveUp},
             { Keys.D, Act.MoveDown },
             { Keys.S, Act.MoveLeft},
-            { Keys.F, Act.MoveRigth },
+            { Keys.F, Act.MoveRight },
         };
 
-        public InputHelper(KeyboardInputHelper keyboardInputHelper)
+        public InputHelper(KeyboardInputHelper keyboardInputHelper, MouseInputHelper mouseInputHelper)
         {
             KeyboardInputHelper = keyboardInputHelper;
+            MouseInputHelper = mouseInputHelper;
         }
 
         public void Update(GameTime gameTime)
         {
             KeyboardInputHelper.Update(gameTime);
+            MouseInputHelper.Update(gameTime);
         }
+
+        private MouseInputHelper MouseInputHelper { get; }
 
         private KeyboardInputHelper KeyboardInputHelper { get; }
 
         public bool WasActionHappened(Act act)
         {
+            if (act == Act.ZoomIn)
+            {
+                return MouseInputHelper.WasMouseWheelIn();
+            }
+
+            if (act == Act.ZoomOut)
+            {
+                return MouseInputHelper.WasMouseWheelOut();
+            }
+
             foreach (var pair in actions)
             {
                 if (KeyboardInputHelper.WasKeyPressed(pair.Key) && pair.Value == act)
