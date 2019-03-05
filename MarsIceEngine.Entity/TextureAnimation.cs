@@ -12,24 +12,25 @@ namespace MarsIceEngine.Entity
 {
     public class TextureAnimation
     {
-        private readonly IDictionary<Act, Texture2D> spriteList;
-        private readonly int frameCountX;
+        private readonly IDictionary<TextureAnimationInfo, Texture2D> spriteList;
         private int currentFrame;
-        internal bool AnimationIsDone => currentAction != Act.Nop;
+
+        public delegate void OnAnimationDoneDelegate();
+
+        public event OnAnimationDoneDelegate OnAnimationDone;
 
         internal Act Act { get; set; }
 
         private Act currentAction;
 
-        public TextureAnimation(Texture2D sprite, int frameCountX) : this(
-            new Dictionary<Act, Texture2D> {{Act.Nop, sprite}}, frameCountX)
+        public TextureAnimation(Texture2D sprite) : this(
+            new Dictionary<TextureAnimationInfo, Texture2D> {{new TextureAnimationInfo(Act.Nop, 1), sprite}})
         {
         }
 
-        public TextureAnimation(IDictionary<Act, Texture2D> spriteList, int frameCountX)
+        public TextureAnimation(IDictionary<TextureAnimationInfo, Texture2D> spriteList)
         {
             this.spriteList = spriteList;
-            this.frameCountX = frameCountX;
 
             currentFrame = 0;
         }
@@ -45,17 +46,21 @@ namespace MarsIceEngine.Entity
 
         public void Draw(SpriteBatch spriteBatch, Vector2 objectPosition)
         {
-            if (currentAction != Act && Act != Act.Nop)
+            var (info, sprite) = spriteList.First(x => x.Key.Act == currentAction);
+            var isAnimationDone = currentFrame >= info.FrameCount;
+
+            if (isAnimationDone)
             {
-                currentAction = Act;
                 currentFrame = 0;
+                currentAction = Act.Nop;
+                OnAnimationDone?.Invoke();
             }
+            
+            var spriteWidth = sprite.Width / info.FrameCount;
 
-            var sprite = spriteList[currentAction];
-
-            var spriteWidth = sprite.Width / frameCountX;
-
-            var window = new Rectangle(currentFrame * spriteWidth, 0, (int)Constants.WorldCellWidth, (int)Constants.WorldCellHeight);
+            var currentWindowX = currentFrame * spriteWidth;
+            var currentWindowWidth = (int)Constants.WorldCellWidth * (isAnimationDone? 1 : 2);
+            var window = new Rectangle(currentWindowX, 0, currentWindowWidth, (int)Constants.WorldCellHeight);
 
             spriteBatch.Draw(
                 sprite, 
@@ -74,10 +79,10 @@ namespace MarsIceEngine.Entity
                 currentFrame++;
             }
 
-            if (currentFrame >= frameCountX)
+            if (currentAction != Act && Act != Act.Nop)
             {
+                currentAction = Act;
                 currentFrame = 0;
-                currentAction = Act.Nop;
             }
         }
     }

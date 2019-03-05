@@ -85,17 +85,31 @@ namespace MarsIceEngine.Monogame
         protected override void LoadContent()
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
-            var playerTextures = new Dictionary<Act, Texture2D>
+            var playerTextures = new Dictionary<TextureAnimationInfo, Texture2D>
             {
-                {Act.Nop, Content.Load<Texture2D>("player-nop")},
-                {Act.MoveRight, Content.Load<Texture2D>("player-moveright")},
+                {
+                    new TextureAnimationInfo
+                    {
+                        Act = Act.Nop,
+                        FrameCount = 10,
+                    },
+                    Content.Load<Texture2D>("player-nop")
+                },
+                {
+                    new TextureAnimationInfo
+                    {
+                        Act = Act.MoveRight,
+                        FrameCount = 9,
+                    },
+                    Content.Load<Texture2D>("player-moveright")
+                },
             };
 
-            player.Texture = new TextureAnimation(playerTextures, 7);
+            player.Texture = new TextureAnimation(playerTextures);
 
             foreach (var cell in world.Cells)
             {
-                cell.Texture = new TextureAnimation(Content.Load<Texture2D>("cell"), 1);
+                cell.Texture = new TextureAnimation(Content.Load<Texture2D>("cell-nop"));
             }
 
             Camera.CenterOn(player.PositionRadiusVector);

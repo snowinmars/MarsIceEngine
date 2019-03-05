@@ -12,9 +12,9 @@ namespace MarsIceEngine.Common
 
         public static readonly float SmallFloat = 0.0001f;
 
-        public static readonly float WorldCellWidth = 32;
+        public static readonly float WorldCellWidth = 128;
 
-        public static readonly float WorldCellHeight = 32;
+        public static readonly float WorldCellHeight = 128;
 
         public static readonly int WorldWidth = 4;
 

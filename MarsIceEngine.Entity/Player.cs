@@ -58,14 +58,8 @@ namespace MarsIceEngine.Entity
             }
 
             Texture.Act = act;
-
-            if (Texture.AnimationIsDone)
-            {
-                PositionRadiusVector += delta;
-            }
-
             Texture.Update(gameTime);
-
+            Texture.OnAnimationDone += () => PositionRadiusVector += delta;
         }
     }
 }
